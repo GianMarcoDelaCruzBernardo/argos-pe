@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'; import { motion } from 'framer-motion';
-import { Eye, ShieldCheck, Cpu, Volume2, CloudOff, Camera, FileCheck, ArrowRight, ArrowUpRight, Check, Lock, Scale, Recycle, HardHat, Plus, Minus, Zap, Sun, Moon, Building2, Mountain, Factory } from 'lucide-react'; import './landing.css';
+import { useState, useEffect, useRef } from 'react'; import { motion, useInView } from 'framer-motion';
+import { Eye, ShieldCheck, Cpu, Volume2, CloudOff, Camera, FileCheck, ArrowRight, ArrowUpRight, Check, Lock, Scale, Recycle, HardHat, Plus, Minus, Zap, Sun, Moon, Building2, Mountain, Factory, Menu, X } from 'lucide-react'; import './landing.css';
 const U = (id, w = 1800) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=80`;
 const IMG = { hero: U('photo-1504307651254-35680f356dfd'), con: U('photo-1541888946425-d81bb19240f5', 1000), min: U('photo-1578319439584-104c94d37305', 1000), man: U('photo-1565514020179-026b92b84bb6', 1000), cta: U('photo-1503387762-592deb58ef4e') };
 const Im = ({ s, c = '' }) => <img className={'im ' + c} src={s} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />;
@@ -12,15 +12,23 @@ const PL = [
   { n: 'Enterprise', p: 1290, s: 'Desde · multi-obra con SLA', f: ['Cámaras ilimitadas', 'Botas + control RFID', 'API y gestión multi-obra', 'Edge Box + router 4G'] }];
 const FAQ = [['¿Funciona sin internet?', 'Sí. Detección, alerta de voz y registro ocurren 100% en tu red interna. La nube (AWS) solo se sincroniza cuando hay conexión.'], ['¿Cuánto demora la instalación?', 'Menos de 24 horas y sin interrumpir operaciones. El kit llega configurado, listo para tu LAN.'], ['¿Cumple con la ley de datos personales?', 'Sí. Aviso visible en el ingreso, acceso restringido a SSOMA y Gerencia, y borrado automático de imágenes según el plan (Ley 29733).'], ['¿Sirve como evidencia ante SUNAFIL?', 'Cada evento guarda foto, fecha, hora exacta y zona, en reportes trazables pensados para auditoría (Ley 29783).'], ['¿Cobran por trabajador?', 'No. Se factura por obra o planta, sin importar cuántos trabajadores tengas.']];
 const EV = ['08:14:22 · INGRESO PRINCIPAL · FALTA CASCO', '08:14:05 · ALMACÉN · CUMPLE EPP', '08:13:41 · ZONA DE IZAJE · FALTA CHALECO', '08:13:10 · INGRESO PRINCIPAL · CUMPLE EPP', '08:12:58 · ALMACÉN · CUMPLE EPP'];
+function Count({ to, dec = 0, pre = '', suf = '' }) {
+  const ref = useRef(null), on = useInView(ref, { once: true }), [v, setV] = useState(0);
+  useEffect(() => { if (!on) return; let s; const f = t => { s = s || t; const p = Math.min(1, (t - s) / 1500); setV(to * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }, [on]);
+  return <span ref={ref}>{pre}{v.toFixed(dec)}{suf}</span>;
+}
 export default function Landing() {
-  const [dark, setDark] = useState(localStorage.getItem('lpTheme') === 'dark'), [r, setR] = useState({ sueldo: 4000, multa: 5500 }), [f, setF] = useState({ sector: 'Construcción' }), [m, setM] = useState(''), [yr, setYr] = useState(false), [q, setQ] = useState(0);
+  const [dark, setDark] = useState(localStorage.getItem('lpTheme') === 'dark'), [r, setR] = useState({ sueldo: 4000, multa: 5500 }), [f, setF] = useState({ sector: 'Construcción' }), [m, setM] = useState(''), [yr, setYr] = useState(false), [menu, setMenu] = useState(false), [q, setQ] = useState(0);
+  useEffect(() => { document.body.style.overflow = menu ? 'hidden' : ''; }, [menu]);
+  const nav = i => { setMenu(false); setTimeout(() => go(i), 80); };
   useEffect(() => { localStorage.setItem('lpTheme', dark ? 'dark' : 'light'); }, [dark]);
   const costo = 4990 + 699, ahorro = r.sueldo * 12 * 0.3 + r.multa, roi = Math.round((ahorro - costo) / costo * 100);
   const send = e => { e.preventDefault(); const tx = `Hola, soy ${f.contacto || ''} de ${f.empresa} (${f.sector}). Correo: ${f.email || '-'}. Quiero una demo de ARGOS EPP.`; window.open(`https://wa.me/${WA}?text=${encodeURIComponent(tx)}`, '_blank'); setM('ok'); };
   return <div className="lp" data-theme={dark ? 'dark' : 'light'}>
     <header className="nav"><div className="brand"><span className="mk"><Eye size={18} /></span>ARGOS<i>EPP</i></div>
       <nav className="links">{[['solucion', 'Solución'], ['sectores', 'Sectores'], ['planes', 'Planes'], ['roi', 'ROI'], ['faq', 'FAQ']].map(([i, l]) => <button key={i} onClick={() => go(i)}>{l}</button>)}</nav>
-      <div className="lact"><button className="ico" onClick={() => setDark(!dark)} aria-label="Tema">{dark ? <Sun size={18} /> : <Moon size={18} />}</button><button className="lbtn" onClick={() => go('piloto')}>Solicitar demo <ArrowUpRight size={16} /></button></div></header>
+      <div className="lact"><button className="ico" onClick={() => setDark(!dark)} aria-label="Tema">{dark ? <Sun size={18} /> : <Moon size={18} />}</button><button className="lbtn" onClick={() => go('piloto')}><span className="lgt">Solicitar demo</span><span className="smt">Demo</span> <ArrowUpRight size={16} /></button><button className="ico burger" onClick={() => setMenu(!menu)} aria-label="Menú">{menu ? <X size={20} /> : <Menu size={20} />}</button></div></header>
+    {menu && <div className="mnav">{[['solucion', 'Solución'], ['sectores', 'Sectores'], ['planes', 'Planes'], ['roi', 'ROI'], ['faq', 'FAQ']].map(([i, l], n) => <button key={i} onClick={() => nav(i)}><em>0{n + 1}</em>{l}</button>)}<button className="lbtn big" onClick={() => nav('piloto')}>Solicitar demo <ArrowRight size={18} /></button></div>}
 
     <section className="hero"><div className="hl"><motion.span className="lab" {...fd()}>DETECCIÓN DE EPP · IA LOCAL · SIN INTERNET</motion.span>
       <motion.h1 {...fd(.05)}>Ningún trabajador entra <mark>sin protección.</mark></motion.h1>
@@ -31,9 +39,13 @@ export default function Landing() {
         <div className="vc"><Volume2 size={16} /> “Trabajador, colóquese el casco”</div><div className="kp"><b>96.4%</b><span>cumplimiento EPP · Torre Trujillo Centro</span></div></div></section>
     <div className="tick"><div>{[...EV, ...EV, ...EV].map((e, i) => <span key={i}><i />{e}</span>)}</div></div>
 
-    <section className="stats">{[['77.7%', 'interés alto en el mercado'], ['81.5%', 'valora el modo offline'], ['88.3%', 'tomaría el piloto'], ['< 24 h', 'instalación en obra']].map(([a, b]) => <div key={a}><b>{a}</b><span>{b}</span></div>)}</section>
+    <section className="stats">{[[77.7, 1, '', '%', 'interés alto en el mercado'], [81.5, 1, '', '%', 'valora el modo offline'], [88.3, 1, '', '%', 'tomaría el piloto'], [24, 0, '< ', ' h', 'instalación en obra']].map(([n, d, p, x, b]) => <div key={b}><b><Count to={n} dec={d} pre={p} suf={x} /></b><span>{b}</span></div>)}</section>
 
-    <section id="solucion" className="sec split"><div className="stick"><span className="lab">01 — LA SOLUCIÓN</span><h2>Una multa SUNAFIL cuesta hasta S/ 288,915. Cada ingreso, ahora comprobado.</h2><p>Una infracción muy grave puede llegar a 52.53 UIT. ARGOS convierte cada ingreso en evidencia verificable.</p></div>
+    <section id="solucion" className="sec split"><div className="stick"><span className="lab">01 — LA SOLUCIÓN</span><h2>Una multa SUNAFIL cuesta hasta S/ 288,915. Cada ingreso, ahora comprobado.</h2><p>Una infracción muy grave puede llegar a 52.53 UIT. ARGOS convierte cada ingreso en evidencia verificable.</p>
+      <motion.div className="vis" {...fd(.1)}><Im s={IMG.hero} /><div className="scn" /><i className="cr tl" /><i className="cr tr" /><i className="cr bl" /><i className="cr br" />
+        <span className="tg t1"><Check size={12} /> CASCO 0.97</span><span className="tg t2"><Check size={12} /> CHALECO 0.94</span><span className="tg t3 bad"><X size={12} /> GUANTES 0.88</span>
+        <div className="vbar"><span><i className="dot" />ANALIZANDO · EN VIVO</span><b>0.12 s</b></div></motion.div>
+      <div className="mini">{[['5', 'EPP verificados'], ['0.12 s', 'por detección'], ['1', 'alerta por persona']].map(([a, b]) => <div key={b}><b>{a}</b><span>{b}</span></div>)}</div></div>
       <div className="rows">{[[Camera, 'Visión artificial en el ingreso', 'YOLOv8n + OpenVINO con tracking: una sola alerta por trabajador, sin duplicados.'], [Volume2, 'Alerta de voz específica', '“Colóquese el casco”: el trabajador se corrige antes de entrar.'], [CloudOff, 'Offline-first', 'Opera sin internet y sincroniza con AWS cuando vuelve la conexión.'], [FileCheck, 'Reportes listos para SUNAFIL', 'Foto, fecha, hora exacta y zona en cada evento.'], [Lock, 'Privacidad por diseño', 'Aviso visible, acceso restringido y borrado automático (Ley 29733).'], [Cpu, 'Hardware plug & play', 'Kit con cámara ESP32-S3-CAM, nodo de alarma y carcasa IP. Edge Box para 24/7.']].map(([I, t, d], i) => <motion.div key={t} className="rw" {...fd(i * .04)}><I size={26} /><div><h3>{t}</h3><p>{d}</p></div><ArrowUpRight size={20} className="ar" /></motion.div>)}</div></section>
 
     <section id="sectores" className="sec nopad"><div className="shd"><span className="lab">02 — SECTORES</span><h2>Hecho para donde el riesgo es real</h2></div>
@@ -60,7 +72,9 @@ export default function Landing() {
         <input type="email" placeholder="Correo corporativo" onChange={e => setF({ ...f, email: e.target.value })} /><select value={f.sector} onChange={e => setF({ ...f, sector: e.target.value })}><option>Construcción</option><option>Manufactura</option><option>Minería</option><option>Otro</option></select>
         <button className="lbtn big">Quiero mi demo <ArrowRight size={18} /></button>{m === 'ok' && <div className="okm">¡Listo! Te contactaremos pronto.</div>}{m === 'err' && <div className="errm">No se pudo enviar, intenta de nuevo.</div>}</form></div></section>
 
-    <section id="faq" className="sec split"><div className="stick"><span className="lab">07 — FAQ</span><h2>Preguntas frecuentes</h2></div>
+    <section id="faq" className="sec split"><div className="stick"><span className="lab">07 — FAQ</span><h2>Preguntas frecuentes</h2>
+      <motion.div className="ask" {...fd(.1)}><Im s={IMG.man} /><div className="ov2"><span className="lab2"><i className="dot" />ESPECIALISTA DISPONIBLE</span><h3>¿Tu duda no está aquí?</h3><p>Conversemos 15 minutos y calculamos cómo ARGOS se adapta a tu obra o planta.</p>
+        <a className="lbtn" href={`https://wa.me/${WA}?text=${encodeURIComponent('Hola, tengo una consulta sobre ARGOS EPP.')}`} target="_blank" rel="noreferrer">Hablar por WhatsApp <ArrowUpRight size={16} /></a></div></motion.div></div>
       <div className="faq">{FAQ.map(([a, b], i) => <div key={a} className={q === i ? 'open' : ''}><button onClick={() => setQ(q === i ? -1 : i)}>{a}{q === i ? <Minus size={18} /> : <Plus size={18} />}</button>{q === i && <p>{b}</p>}</div>)}</div></section>
 
     <div className="hz" /><footer className="foot"><div className="lgl">{[[Scale, 'Ley 29783'], [Lock, 'Ley 29733'], [Zap, 'MTC · INDECOPI'], [Recycle, 'RAEE D.S. 009-2012']].map(([I, t]) => <span key={t}><I size={16} />{t}</span>)}</div>
